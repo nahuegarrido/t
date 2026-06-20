@@ -4,5 +4,8 @@
   "type": "module",
   "dependencies": {
     "puppeteer": "^22.0.0"
+  },
+  "scripts": {
+    "postinstall": "puppeteer browsers install chrome"
   }
 }
