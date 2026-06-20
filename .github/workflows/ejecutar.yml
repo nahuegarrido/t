@@ -2,18 +2,23 @@ name: Ejecutar script M3U8 cada hora
 
 on:
   schedule:
-    # Se ejecuta automáticamente en el minuto 0 de cada hora
     - cron: '0 * * * *'
-  # Mantiene el botón manual en la pestaña Actions por si quieres forzar la actualización
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    # Forzamos que el token por defecto tenga permisos de escritura directamente desde el código
+    permissions:
+      contents: write
+
     steps:
     - name: Clonar repositorio
       uses: actions/checkout@v4
+      with:
+        # Esto asegura que use el token correcto con los permisos asignados arriba
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configurar Node.js
       uses: actions/setup-node@v4
@@ -31,4 +36,8 @@ jobs:
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git add lista.m3u8
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Actualizacion automatica del enlace M3U8" && git push)
+        # Si hay cambios, hace el commit y el push usando el token de autenticación explícito
+        if ! git diff --quiet || ! git diff --staged --quiet; then
+          git commit -m "Actualizacion automatica del enlace M3U8"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
+        fi
