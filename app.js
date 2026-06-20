@@ -5,10 +5,9 @@ async function capturarFlujoOculto() {
 
     const { default: puppeteer } = await import('puppeteer');
 
-    // Forzamos a Puppeteer a usar el Google Chrome nativo que GitHub ya tiene preinstalado
+    // Dejamos que Puppeteer administre de forma automática su propio ejecutable de Chrome
     const browser = await puppeteer.launch({
         headless: true, 
-        executablePath: '/usr/bin/google-chrome',
         args: [
             '--disable-blink-features=AutomationControlled',
             '--no-sandbox',
