@@ -5,9 +5,10 @@ async function capturarFlujoOculto() {
 
     const { default: puppeteer } = await import('puppeteer');
 
-    // Lanzamos el navegador optimizado para entornos Linux de servidor (GitHub)
+    // Forzamos a Puppeteer a usar el Google Chrome nativo que GitHub ya tiene preinstalado
     const browser = await puppeteer.launch({
         headless: true, 
+        executablePath: '/usr/bin/google-chrome',
         args: [
             '--disable-blink-features=AutomationControlled',
             '--no-sandbox',
@@ -22,6 +23,7 @@ async function capturarFlujoOculto() {
 
     let enlaceDetectado = null;
 
+    // Escuchador de red inteligente
     page.on('response', async (response) => {
         try {
             const url = response.url();
@@ -36,10 +38,9 @@ async function capturarFlujoOculto() {
                     console.log(enlaceDetectado);
                     console.log("=================================================================\n");
                     
-                    // Creamos el contenido del archivo en formato IPTV M3U clásico
+                    // Formato IPTV estándar
                     const contenidoM3U = `#EXTM3U\n#EXTINF:-1 tvg-id="Telemundo" tvg-name="Telemundo 4K" tvg-logo="" group-title="Canales",Telemundo 4K\n${enlaceDetectado}\n`;
                     
-                    // Guardamos el archivo de forma local en el servidor de GitHub
                     fs.writeFileSync('lista.m3u8', contenidoM3U, 'utf8');
                     console.log("[💾] Archivo lista.m3u8 generado con éxito.");
 
@@ -54,20 +55,22 @@ async function capturarFlujoOculto() {
 
     try {
         const urlTuWeb = "https://crypton4k.rf.gd/t.html?i=1";
-        console.log(`[+] Cargando: ${urlTuWeb}`);
+        console.log(`[+] Conectando a: ${urlTuWeb}`);
         
+        // Esperamos a que la red se estabilice por completo en el servidor
         await page.goto(urlTuWeb, { waitUntil: 'networkidle2', timeout: 60000 });
-        await new Promise(resolve => setTimeout(resolve, 7000));
+        console.log("[+] Página cargada de forma virtual. Esperando inicialización del iframe...");
+        await new Promise(resolve => setTimeout(resolve, 8000));
 
-        // Forzamos el clic en el reproductor virtual
+        console.log("[*] Forzando clic virtual en el centro del reproductor...");
         await page.mouse.click(640, 360);
 
-        // Esperamos un tiempo prudencial en el servidor
+        console.log("[*] Monitoreando tráfico de red entrante en el servidor...");
         await new Promise(resolve => setTimeout(resolve, 25000));
 
     } catch (err) {
         if (!enlaceDetectado) {
-            console.error("[-] El tiempo de espera terminó sin capturas:", err.message);
+            console.error("[-] Error en la ejecución interna del navegador:", err.message);
             process.exit(1);
         }
     } finally {
@@ -77,6 +80,6 @@ async function capturarFlujoOculto() {
 }
 
 capturarFlujoOculto().catch(err => {
-    console.error("Error general:", err);
+    console.error("Error crítico general:", err);
     process.exit(1);
 });
